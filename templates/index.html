@@ -457,14 +457,31 @@
             <h2>🔍 SEARCH THE ARCHIVES</h2>
 
             <div class="tabs">
-                <button class="tab active" onclick="switchTab('films')">Films by Character</button>
+                <button class="tab active" onclick="switchTab('search')">Ask a Question</button>
+                <button class="tab" onclick="switchTab('films')">Films by Character</button>
                 <button class="tab" onclick="switchTab('characters_film')">Characters by Film</button>
                 <button class="tab" onclick="switchTab('homeworld')">Character Homeworld</button>
                 <button class="tab" onclick="switchTab('characters_planet')">Characters by Planet</button>
                 <button class="tab" onclick="switchTab('starships')">Starships by Pilot</button>
             </div>
 
-            <form id="filmsForm" class="query-form active" onsubmit="handleQuery(event, 'films_by_character')">
+            <form id="searchForm" class="query-form active" onsubmit="handleSearch(event)">
+                <div class="form-group">
+                    <label>◈ Ask Any Question</label>
+                    <input type="text" name="question" placeholder="e.g., What films does Luke Skywalker appear in?" required>
+                </div>
+                <button type="submit" class="btn">Search</button>
+                <div class="examples">
+                    <h4>✦ Try These Questions:</h4>
+                    <span class="example-btn" onclick="fillSearchInput('What films does Luke Skywalker appear in?')">Films by Luke</span>
+                    <span class="example-btn" onclick="fillSearchInput('Who appears in A New Hope?')">A New Hope Cast</span>
+                    <span class="example-btn" onclick="fillSearchInput('What is the homeworld of Luke Skywalker?')">Luke\'s Homeworld</span>
+                    <span class="example-btn" onclick="fillSearchInput('What characters are from Tatooine?')">From Tatooine</span>
+                    <span class="example-btn" onclick="fillSearchInput('What starships does Han Solo pilot?')">Han\'s Ships</span>
+                </div>
+            </form>
+
+            <form id="filmsForm" class="query-form" onsubmit="handleQuery(event, 'films_by_character')">
                 <div class="form-group">
                     <label>◈ Character Name</label>
                     <input type="text" name="param" placeholder="e.g., Luke Skywalker" required>
@@ -551,7 +568,7 @@
     </div>
 
     <script>
-        let currentTab = 'films';
+        let currentTab = 'search';
 
         function switchTab(tab) {
             currentTab = tab;
@@ -562,6 +579,7 @@
             document.querySelectorAll('.query-form').forEach(f => f.classList.remove('active'));
 
             const formMap = {
+                'search': 'searchForm',
                 'films': 'filmsForm',
                 'characters_film': 'charactersFilmForm',
                 'homeworld': 'homeworldForm',
@@ -576,6 +594,64 @@
         function fillInput(formId, value) {
             const form = document.getElementById(formId);
             form.querySelector('input[name="param"]').value = value;
+        }
+
+        function fillSearchInput(value) {
+            const form = document.getElementById('searchForm');
+            form.querySelector('input[name="question"]').value = value;
+        }
+
+        async function handleSearch(event) {
+            event.preventDefault();
+
+            const form = event.target;
+            const question = form.querySelector('input[name="question"]').value;
+
+            const resultsContainer = document.getElementById('resultsContainer');
+            const resultsContent = document.getElementById('resultsContent');
+
+            resultsContainer.classList.add('show');
+            resultsContent.innerHTML = '<div class="loading"><div class="spinner"></div>Searching the galaxy...</div>';
+
+            try {
+                const response = await fetch('/api/search', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ question: question })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    if (data.interpretation) {
+                        const interpDiv = document.createElement('div');
+                        interpDiv.style.cssText = 'margin-bottom: 15px; padding: 10px; background: rgba(74, 158, 255, 0.2); border-left: 3px solid #4A9EFF; color: #4A9EFF;';
+                        interpDiv.innerHTML = `<strong>📝 Interpreted as:</strong> ${data.interpretation}`;
+                        resultsContent.innerHTML = '';
+                        resultsContent.appendChild(interpDiv);
+
+                        const resultsDiv = document.createElement('div');
+                        resultsDiv.innerHTML = '';
+                        displayResults(data.results);
+                    } else {
+                        displayResults(data.results);
+                    }
+                } else {
+                    let errorHtml = `<div class="error">⚠️ ${data.error}</div>`;
+                    if (data.suggestions) {
+                        errorHtml += '<div class="examples" style="margin-top: 15px;"><h4>💡 Try asking:</h4>';
+                        data.suggestions.forEach(suggestion => {
+                            errorHtml += `<span class="example-btn" onclick="fillSearchInput('${suggestion}')">${suggestion}</span>`;
+                        });
+                        errorHtml += '</div>';
+                    }
+                    resultsContent.innerHTML = errorHtml;
+                }
+            } catch (error) {
+                resultsContent.innerHTML = `<div class="error">⚠️ Error: ${error.message}</div>`;
+            }
         }
 
         async function handleQuery(event, queryType) {
