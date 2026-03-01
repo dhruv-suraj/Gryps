@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, jsonify
 import db
+import os
 from query import (
     query_films_by_character,
     query_characters_by_film,
@@ -92,10 +93,11 @@ def api_stats():
 
 
 if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 8000))
     print("\n" + "=" * 60)
     print("SWAPI Query Tool - Web Interface")
     print("=" * 60)
-    print("\nStarting server at http://localhost:8000")
-    print("Also accessible at http://127.0.0.1:8000")
+    print(f"\nStarting server at http://localhost:{port}")
+    print(f"Also accessible at http://127.0.0.1:{port}")
     print("Press CTRL+C to stop\n")
-    app.run(debug=True, host='0.0.0.0', port=8000)
+    app.run(debug=True, host='0.0.0.0', port=port)
