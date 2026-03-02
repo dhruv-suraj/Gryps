@@ -1,367 +1,160 @@
-# SWAPI Data & Query Tool
+# Star Wars Data Explorer
 
-A tool for fetching, storing, and querying Star Wars data from the [SWAPI](https://swapi.info/documentation).
+Okay so basically this grabs all the Star Wars data from SWAPI and lets you search through it. I built both a web interface (looks pretty cool with the space theme) and a command-line tool if you're into that.
 
-Includes both a **command-line interface** and a **web-based UI** for easy exploration.
+## What it does
 
-## Features
+You know how SWAPI has all this Star Wars data scattered around? This pulls everything down, dumps it into a SQLite database, and gives you a few ways to search through it. You can find stuff like "what movies was Luke in" or "who's from Tatooine" - that kind of thing.
 
-- Fetches complete dataset from SWAPI with progress tracking
-- Stores data in a normalized SQLite database with proper relationships
-- **Modern web interface** with beautiful UI for easy querying
-- Command-line interface for programmatic access
-- Fast, case-insensitive queries with clean table output
-- Support for JSON output format
-- Database statistics and metadata tracking
-- Natural language search capability
+## Getting started
 
-## Setup
-
-### Requirements
-
-- Python 3.8 or higher
-
-### Installation
-
-1. Install dependencies:
+Make sure you've got Python 3.8+ installed. Then:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-That's it. No additional setup required.
+That's it for setup.
 
-## Usage
+## Running it
 
-You can interact with the data in two ways: **Web Interface** (recommended for exploration) or **Command Line** (for scripting).
+### Step 1: Get the data
 
-### 1. Fetch and Store Data
-
-**Important:** You must fetch the data first before using either interface.
-
-Run the ingestion script to download all SWAPI data and populate the database:
+First time you need to pull all the data from SWAPI:
 
 ```bash
-python ingest.py
+python3 ingest.py
 ```
 
-This will:
-- Fetch all people, films, planets, and starships from SWAPI
-- Create a normalized SQLite database (`swapi.db`)
-- Show progress bars for each data type
-- Display a summary of fetched records
+This takes maybe a minute or two. You'll see progress bars as it downloads characters, films, planets, and starships. When it's done you'll have a `swapi.db` file with everything in it.
 
-Expected output:
-```
-Initializing database...
-
-Fetching and storing SWAPI data...
-This may take a minute or two...
-
-Fetching planets: 100%|██████████| 6/6 [00:02<00:00]
-Inserting planets: 100%|██████████| 60/60 [00:00<00:00]
-Fetching films: 100%|██████████| 1/1 [00:01<00:00]
-Inserting films: 100%|██████████| 6/6 [00:00<00:00]
-...
-
-==================================================
-Ingestion complete!
-==================================================
-Characters: 82
-Films: 6
-Planets: 60
-Starships: 36
-
-Database saved to: swapi.db
-```
-
-**Options:**
-
-- `--force`: Delete existing database and re-fetch all data
-- `--refresh`: Update existing database with fresh data
-
+If you mess something up and want to start fresh, just run:
 ```bash
-python ingest.py --force    # Complete refresh
-python ingest.py --refresh  # Update existing data
+python3 ingest.py --force
 ```
 
-### 2. Web Interface (Recommended)
+### Step 2: Search the data
 
-Launch the web interface for an easy, visual way to explore the data:
+Two ways to do this:
+
+#### Option A: Web interface (easier)
 
 ```bash
 python3 app.py
 ```
 
-Then open your browser to **http://localhost:5000**
+Then open http://localhost:8000 in your browser.
 
-**Features:**
-- Beautiful, modern UI with gradient design
-- Live database statistics dashboard
-- 5 query types with example buttons for quick testing
-- Interactive result tables
-- Real-time search with visual feedback
-- Responsive design that works on all screen sizes
+There's a "Ask a Question" tab where you can literally just type questions like:
+- "What films does Luke Skywalker appear in?"
+- "Who appears in A New Hope?"
+- "What is Luke's homeworld?"
 
-**Query Types Available:**
-1. Films by Character - Find all films a character appears in
-2. Characters by Film - See all characters in a specific film
-3. Character Homeworld - Discover where a character is from
-4. Characters by Planet - Find all characters from a specific planet
-5. Starships by Character - See which starships a character pilots
+The other tabs let you search by specific categories if you prefer that. I added some example buttons too so you can click around and see what it does.
 
-Each query type includes helpful examples you can click to try instantly!
+#### Option B: Command line
 
-### 3. Command Line Interface
+For when you want to script stuff or just prefer the terminal:
 
-The query tool provides several commands to retrieve data:
-
-#### Test Query 1: Films by Character
-
-**Question:** What are the names of all the films that Luke Skywalker appears in?
-
+**Films by character:**
 ```bash
-python query.py films --character "Luke Skywalker"
+python3 query.py films --character "Luke Skywalker"
 ```
 
-**Output:**
-```
-+------------------------------------+---------------+-----------------+
-| title                              | episode_id    | release_date    |
-+====================================+===============+=================+
-| A New Hope                         | 4             | 1977-05-25      |
-| The Empire Strikes Back            | 5             | 1980-05-17      |
-| Return of the Jedi                 | 6             | 1983-05-25      |
-| Revenge of the Sith                | 3             | 2005-05-19      |
-+------------------------------------+---------------+-----------------+
-```
-
-#### Test Query 2: Characters by Film
-
-**Question:** What are the names of all characters who appear in "A New Hope" (Episode IV)?
-
+**Characters in a film:**
 ```bash
-python query.py characters --film "A New Hope"
+python3 query.py characters --film "A New Hope"
 ```
 
-**Output:**
-```
-+----------------------+----------+--------------+
-| name                 | gender   | birth_year   |
-+======================+==========+==============+
-| Biggs Darklighter    | male     | 24BBY        |
-| C-3PO                | n/a      | 112BBY       |
-| Darth Vader          | male     | 41.9BBY      |
-| Greedo               | male     | 44BBY        |
-| Han Solo             | male     | 29BBY        |
-| Jabba Desilijic Tiure| hermaphrodite | 600BBY  |
-| Leia Organa          | female   | 19BBY        |
-| Luke Skywalker       | male     | 19BBY        |
-| Obi-Wan Kenobi       | male     | 57BBY        |
-| R2-D2                | n/a      | 33BBY        |
-| R5-D4                | n/a      | unknown      |
-| Wilhuff Tarkin       | male     | 64BBY        |
-| ... (continues)
-+----------------------+----------+--------------+
-```
-
-#### Test Query 3: Homeworld by Character
-
-**Question:** What is the name of the homeworld of Luke Skywalker?
-
+**Character's homeworld:**
 ```bash
-python query.py homeworld --character "Luke Skywalker"
+python3 query.py homeworld --character "Luke Skywalker"
 ```
 
-**Output:**
-```
-+------------------+------------+----------+-------------+--------------+
-| character        | homeworld  | climate  | terrain     | population   |
-+==================+============+==========+=============+==============+
-| Luke Skywalker   | Tatooine   | arid     | desert      | 200000       |
-+------------------+------------+----------+-------------+--------------+
-```
-
-#### Test Query 4: Characters by Homeworld
-
-**Question:** What are the names of all characters who are from the planet Tatooine?
-
+**Everyone from a planet:**
 ```bash
-python query.py characters --homeworld "Tatooine"
+python3 query.py characters --homeworld "Tatooine"
 ```
 
-**Output:**
-```
-+----------------------------+----------+--------------+
-| name                       | gender   | birth_year   |
-+============================+==========+==============+
-| Anakin Skywalker           | male     | 41.9BBY      |
-| Beru Whitesun lars         | female   | 47BBY        |
-| Biggs Darklighter          | male     | 24BBY        |
-| C-3PO                      | n/a      | 112BBY       |
-| Cliegg Lars                | male     | 82BBY        |
-| Luke Skywalker             | male     | 19BBY        |
-| Owen Lars                  | male     | 52BBY        |
-| R5-D4                      | n/a      | unknown      |
-| Shmi Skywalker             | female   | 72BBY        |
-+----------------------------+----------+--------------+
-```
-
-#### Test Query 5: Starships by Character
-
-**Question:** What are the names of all starships piloted by Han Solo?
-
+**Starships someone pilots:**
 ```bash
-python query.py starships --character "Han Solo"
+python3 query.py starships --character "Han Solo"
 ```
 
-**Output:**
-```
-+---------------------+---------------------+-----------------------------+------------------+
-| name                | model               | manufacturer                | starship_class   |
-+=====================+=====================+=============================+==================+
-| Imperial shuttle    | Lambda-class T-4a   | Sienar Fleet Systems        | Armed transport  |
-| Millennium Falcon   | YT-1300 light       | Corellian Engineering       | Light freighter  |
-|                     | freighter           | Corporation                 |                  |
-+---------------------+---------------------+-----------------------------+------------------+
-```
+Add `--json` to any of these if you want JSON instead of a table.
 
-### Additional Commands
-
-#### Database Statistics
-
-View a summary of the database contents:
-
-```bash
-python query.py stats
-```
-
-**Output:**
-```
-========================================
-SWAPI Database Statistics
-========================================
-Characters: 82
-Films: 6
-Planets: 60
-Starships: 36
-
-Last updated: 2024-01-15T10:30:45.123456
-========================================
-```
-
-#### Natural Language Search
-
-Try a free-form search query:
-
-```bash
-python query.py search "What films does Luke appear in?"
-python query.py search "Who appears in A New Hope?"
-```
-
-#### JSON Output
-
-Add `--json` flag to any query for machine-readable output:
-
-```bash
-python query.py films --character "Luke Skywalker" --json
-```
-
-**Output:**
-```json
-[
-  {
-    "title": "A New Hope",
-    "episode_id": 4,
-    "release_date": "1977-05-25"
-  },
-  {
-    "title": "The Empire Strikes Back",
-    "episode_id": 5,
-    "release_date": "1980-05-17"
-  }
-]
-```
-
-### Query Features
-
-- **Case-insensitive matching**: "luke skywalker", "Luke Skywalker", and "LUKE SKYWALKER" all work
-- **Partial matching**: "Luke" will match "Luke Skywalker"
-- **Clean error messages**: Helpful feedback when no results are found
-- **Fast lookups**: Database indexes on all searchable fields
-
-## Architecture & Design
-
-### Database Schema
-
-The tool uses a normalized SQLite schema that mirrors SWAPI's relational structure:
-
-**Core Tables:**
-- `people` (characters with homeworld reference)
-- `films` (movies with metadata)
-- `planets` (locations)
-- `starships` (vehicles)
-
-**Junction Tables:**
-- `people_films` (many-to-many: characters ↔ films)
-- `people_starships` (many-to-many: characters ↔ starships)
-- `films_planets` (many-to-many: films ↔ planets)
-
-This design allows efficient SQL joins for all query types without string parsing or post-processing.
-
-### Why SQLite?
-
-- No server setup required
-- File-based persistence
-- Full SQL support including complex joins
-- Included in Python's standard library
-- Perfect for datasets of this size
-
-### File Structure
+## What's in here
 
 ```
-swapi_tool/
-├── db.py              # Database schema and connection helpers
-├── ingest.py          # SWAPI data fetching and population
-├── query.py           # CLI query interface
-├── app.py             # Flask web application
+├── app.py              # Flask web app
+├── db.py               # Database stuff (schema, connections)
+├── ingest.py           # Fetches data from SWAPI
+├── query.py            # CLI search tool
 ├── templates/
-│   └── index.html     # Web interface UI
-├── requirements.txt   # Python dependencies
-├── README.md          # This file
-└── swapi.db          # SQLite database (created after ingestion)
+│   └── index.html      # Web UI (has a cool space theme)
+├── requirements.txt    # Python packages you need
+└── swapi.db           # Database (created after you run ingest.py)
 ```
 
-## Troubleshooting
+## The 5 test queries
 
-**Database not found error:**
-```
-Error: Database not found at swapi.db
-Please run 'python ingest.py' first to fetch and store the data.
-```
-**Solution:** Run `python ingest.py` to create the database.
+These were the requirements, and yeah they all work:
 
-**No results found:**
-```
-No films found for character matching 'Luke'
-Try a different spelling or check if the character exists.
-```
-**Solution:** Check spelling or try a more specific search term. Use `python query.py stats` to verify data exists.
+1. **What are the names of all the films that Luke Skywalker appears in?**
+   ```bash
+   python3 query.py films --character "Luke Skywalker"
+   ```
+   Or on web: Type that question in the "Ask a Question" tab
 
-**Connection timeout during ingestion:**
-The script includes automatic retry logic and rate limiting. If ingestion fails, simply run `python ingest.py --refresh` to continue.
+2. **What are the names of all characters who appear in "A New Hope"?**
+   ```bash
+   python3 query.py characters --film "A New Hope"
+   ```
 
-## Requirements
+3. **What is the name of the homeworld of Luke Skywalker?**
+   ```bash
+   python3 query.py homeworld --character "Luke Skywalker"
+   ```
 
-See `requirements.txt` for specific versions. Core dependencies:
+4. **What are the names of all characters who are from the planet Tatooine?**
+   ```bash
+   python3 query.py characters --homeworld "Tatooine"
+   ```
 
-- `requests` - HTTP client for SWAPI
-- `tabulate` - Pretty table formatting
-- `tqdm` - Progress bars
-- `flask` - Web framework for the UI
+5. **What are the names of all starships piloted by Han Solo?**
+   ```bash
+   python3 query.py starships --character "Han Solo"
+   ```
 
-All dependencies are lightweight and well-maintained.
+## Technical stuff
 
-## License
+I used SQLite because it's simple and doesn't need a server running. The schema is normalized with proper foreign keys and junction tables for the many-to-many relationships (like characters appearing in multiple films).
 
-This is a coding test project. Use freely for evaluation purposes.
+The web app is Flask - nothing fancy, just works. I threw in some CSS to make it look like a Star Wars interface because why not.
+
+For the natural language search, it's not using any ML or anything. Just pattern matching on common question formats. Works pretty well though.
+
+## If something breaks
+
+**"Database not found" error:**
+Run `python3 ingest.py` first. You need to fetch the data before you can search it.
+
+**Can't find a character:**
+Make sure the spelling is right. The search is case-insensitive and does partial matching, so "luke" will find "Luke Skywalker" but you need at least part of the name correct.
+
+**Ingestion fails halfway:**
+Just run it again with `python3 ingest.py --refresh`. It won't duplicate data.
+
+## Deploying to Render
+
+If you want to put this online, it's set up for Render already:
+
+1. Push to GitHub
+2. Connect your repo to Render
+3. It'll auto-detect the `render.yaml` and deploy
+
+The build command runs `ingest.py` automatically so the database gets created on deployment.
+
+---
+
+That's pretty much it. The code should be straightforward if you want to poke around.

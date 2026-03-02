@@ -1,5 +1,8 @@
-requests>=2.31.0
-tabulate>=0.9.0
-tqdm>=4.66.0
-flask>=3.0.0
-gunicorn>=21.2.0
+# Core dependencies
+requests>=2.31.0        # for hitting the SWAPI endpoints
+tabulate>=0.9.0         # makes the CLI output look nice in tables
+tqdm>=4.66.0           # progress bars during data ingestion
+
+# Web interface
+flask>=3.0.0           # web framework for the UI
+gunicorn>=21.2.0       # production server (needed for Render deployment)
